@@ -20,4 +20,26 @@ def register():
         return jsonify({"error": "Username already exists"}), 400
 
     hashed_password = generate_password_hash(password)
-    user = User
+    user = User(username=username, password=hashed_password, role='user')
+    db.session.add(user)
+    db,session.commit()
+    return jsonify({"message": "User registered successfully"}), 201
+
+@auth_bp.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    
+    user = User.query.filter_by(username=username).first()
+    if not user of not check_password_hash(user.password, password):
+        return jsonify({"error": "Invalid credentials"})m 401
+
+    login_user(user)
+    return jsonify({"message": f"Welcome {user.username}!"})
+
+@auth_bp.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message": "Logged out successfully"})
