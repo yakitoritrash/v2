@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from datetime import datetime
+from datetime import datetime, timezone
 from app.models import ParkingLot, ParkingSpot, Reservation, User 
 from app import db
 
@@ -31,7 +31,7 @@ def reserve_spot():
                 user_id=user_id,
                 lot_id=lot_id,
                 spot_id=spot.id,
-                parking_timestamp=datetime.now()
+                parking_timestamp=datetime.now(timezone.utc)
                 )
         spot.status = 'O'
 
@@ -60,7 +60,7 @@ def leave_parking():
     if not reservation:
         return jsonify({'message': 'No active reservation found'}), 400
 
-    reservation.leaving_timestamp = datetime.utcnow()
+    reservation.leaving_timestamp = datetime.now(timezone.utc)
 
     parked_seconds = (reservation.leaving_timestamp - reservation.parking_timestamp).total_seconds()
     parked_hours = parked_seconds / 3600
