@@ -33,3 +33,26 @@ def create_parking_lot():
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': 'Error creating parking lot', 'error': str(e)}), 500
+
+@admin_bp.route('/parking-lots', methods=['GET'])
+@jwt_required()
+def get_parking_lots():
+    user_id = get_jwt_identity()
+    user = User.query.get(int(user_id))
+    if user.role != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+    try:
+        lots = ParkingLot.query.all()
+        output = []
+        for lot in lots:
+            output.append({
+                'id': lot.id,
+                'prime_location_name': lot.prime_location_name,
+                'price': lot.price,
+                'address': lot.address,
+                'pincode': lot.pincode,
+                'number_of_spots': lot.number_of_spots
+                })
+        return jsonify({'parking_lots': output}), 200
+    except Exception as e:
+        return jsonify({'message': 'Error fetching parking lots', 'error': str(e)}), 500
