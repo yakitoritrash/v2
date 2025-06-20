@@ -27,6 +27,6 @@ def login():
     if not user or not check_password_hash(user.password, data['password']):
         return jsonify({'message': 'Invalid credentials'}), 401
 
-    access_token = create_access_token(identity={'id': user.id, 'role': user.role})
+    access_token = create_access_token(identity=str(user.id))
     return jsonify({'access_token': access_token}), 200
 
