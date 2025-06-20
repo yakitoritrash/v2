@@ -31,7 +31,7 @@ def reserve_spot():
                 user_id=user_id,
                 lot_id=lot_id,
                 spot_id=spot.id,
-                parking_timestamp=datetime.now(timezone.utc)
+                parking_timestamp=datetime.now()
                 )
         spot.status = 'O'
 
@@ -60,7 +60,7 @@ def leave_parking():
     if not reservation:
         return jsonify({'message': 'No active reservation found'}), 400
 
-    reservation.leaving_timestamp = datetime.now(timezone.utc)
+    reservation.leaving_timestamp = datetime.now()
 
     parked_seconds = (reservation.leaving_timestamp - reservation.parking_timestamp).total_seconds()
     parked_hours = parked_seconds / 3600
