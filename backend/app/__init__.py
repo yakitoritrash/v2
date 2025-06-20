@@ -24,10 +24,12 @@ def create_app():
 
     from app.views.auth import auth_bp
     from app.views.admin import admin_bp
+    from app.views.parking import parking_bp
     from app.views.user import user_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(user_bp, url_prefix="/user")
+    app.register_blueprint(parking_bp)
 
     return app
