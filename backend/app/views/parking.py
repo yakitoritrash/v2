@@ -49,3 +49,33 @@ def reserve_spot():
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': 'Reservation failed', 'error': str(e)}), 500
+
+
+@parking_bp.route('/leave', methods=['POST'])
+@jwt_required()
+def leave_parking():
+    current_user_id = get_jwt_identity()
+
+    reservation = Reservation.query.filter_by(user_id=current_user_id, leaving_timestamp=None).first()
+    if not reservation:
+        return jsonify({'message': 'No active reservation found'}), 400
+
+    reservation.leaving_timestamp = datetime.utcnow()
+
+    parked_seconds = (reservation.leaving_timestamp - reservation.parking_timestamp).total_seconds()
+    parked_hours = parked_seconds / 3600
+
+    lot = ParkingLot.query.get(reservation.lot_id)
+    rate = lot.price if lot else 0
+    reservation.parking_cost = round(parked_hours * rate, 2)
+    
+    spot = ParkingSpot.query.get(reservation.spot_id)
+    if spot:
+        spot.status = 'A'
+
+    db.session.commit()
+    return jsonify({
+        'message': 'Spot released successfully',
+        'duration_hours': round(parked_hours, 2),
+        'total_cost': reservation.parking_cost
+        })
