@@ -12,7 +12,7 @@ celery = Celery(__name__, broker='redis://localhost:6379/0')
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET KEY'] = 'supersecret'
+    app.config['SECRET_KEY'] = 'supersecretkey123'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///parking.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

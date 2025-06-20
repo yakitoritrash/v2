@@ -1,3 +1,5 @@
+# pyright: reportGeneralTypeIssues=false
+
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required
@@ -12,9 +14,9 @@ def load_user(user_id):
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    data = request.json
-    username = data.get('username')
-    password = data.get('password')
+    data = request.get_json() or {}
+    username = data.get('username') 
+    password = data.get('password') 
 
     if User.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists"}), 400
@@ -22,18 +24,18 @@ def register():
     hashed_password = generate_password_hash(password)
     user = User(username=username, password=hashed_password, role='user')
     db.session.add(user)
-    db,session.commit()
+    db.session.commit()
     return jsonify({"message": "User registered successfully"}), 201
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
-    data = request.json
+    data = request.get_json() or {}
     username = data.get('username')
     password = data.get('password')
     
     user = User.query.filter_by(username=username).first()
-    if not user of not check_password_hash(user.password, password):
-        return jsonify({"error": "Invalid credentials"})m 401
+    if not user or not check_password_hash(user.password, password):
+        return jsonify({"error": "Invalid credentials"}), 401
 
     login_user(user)
     return jsonify({"message": f"Welcome {user.username}!"})
