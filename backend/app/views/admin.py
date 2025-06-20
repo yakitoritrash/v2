@@ -56,3 +56,16 @@ def get_parking_lots():
         return jsonify({'parking_lots': output}), 200
     except Exception as e:
         return jsonify({'message': 'Error fetching parking lots', 'error': str(e)}), 500
+
+@admin_bp.route('/parking-lot/<int:lot_id>/spots', methods=['GET'])
+@jwt_required()
+def get_parking_spots(lot_id):
+    user_id = get_jwt_identity()
+    user = User.query.get(int(user_id))
+    if user.role != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+
+    spots = ParkingSpot.query.filter_by(lot_id=lot_id).all()
+    data = [{'id': spot.id, 'status': spot.status} for spot in spots]
+    return jsonify({'parking_spots': data}), 200
+
