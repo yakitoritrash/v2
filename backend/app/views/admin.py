@@ -4,6 +4,7 @@ from app.models import ParkingLot, ParkingSpot, User
 from app import db
 
 admin_bp = Blueprint('admin', __name__)
+
 @admin_bp.route('/parking-lot', methods=['POST'])
 @jwt_required()
 def create_parking_lot():
@@ -68,4 +69,47 @@ def get_parking_spots(lot_id):
     spots = ParkingSpot.query.filter_by(lot_id=lot_id).all()
     data = [{'id': spot.id, 'status': spot.status} for spot in spots]
     return jsonify({'parking_spots': data}), 200
+
+@admin_bp.route('/parking-lot/<int:lot_id>', methods=['PUT'])
+@jwt_required()
+def update_parking_lot(lot_id):
+    user = User.query.get(get_jwt_identity())
+    if user.role != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+
+    lot = ParkingLot.query.get_or_404(lot_id)
+    data = request.get_json()
+
+    try:
+        lot.prime_location_name = data.get('prime_location_name', lot.prime_location_name)
+        lot.price = data.get('price', lot.price)
+        lot.address = data.get('address', lot.address)
+        lot.pincode = data.get('pincode', lot.pincode)
+
+        db.session.commit()
+        return jsonify({'message': 'Parking lot updated successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error updating lot', 'error': str(e)}), 500
+
+@admin_bp.route('/parking-lot/<int:lot_id>', methods=['DELETE'])
+@jwt_required()
+def delete_parking_lot(lot_id):
+    user = User.query.get(get_jwt_identity())
+    if user.role != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+
+    lot = ParkingLot.query.get_or_404(lot_id)
+
+    if any(spot.status == 'O' for spot in lot.spots):
+        return jsonify({"message": "Cannot delete lot. One or more spots are still occupied."}), 400
+
+    try:
+        db.session.delete(lot)
+        db.session.commit()
+        return jsonify({'message': "Parking lot deleted successfully"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error deleting lot', 'error': str(e)}), 500
+
 
