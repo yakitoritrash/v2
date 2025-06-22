@@ -12,7 +12,7 @@ def view_parking_lots():
     lots = ParkingLot.query.all()
     output = []
     for lot in lots:
-        available = ParkingSpot.query.filter_by(lot_id=lot.id, status='A')
+        available = ParkingSpot.query.filter_by(lot_id=lot.id, status='A').count()
         output.append({
             'id': lot.id,
             'prime_location_name': lot.prime_location_name,
@@ -20,6 +20,23 @@ def view_parking_lots():
             'address': lot.address,
             'pincode': lot.pincode,
             'available_spots': available
-            })
+        })
     return jsonify({'parking_lots': output}), 200
+
+@user_bp.route('/my-reservation', methods=['GET'])
+@jwt_required()
+def my_reservation():
+    user_id = get_jwt_identity()
+    reservation = Reservation.query.filter_by(user_id=user_id, leaving_timestamp=None).first()
+
+    if not reservation:
+        return jsonify({'message': 'No active reservation found'}), 404
+
+    lot = ParkingLot.query.get(reservation.lot_id)
+    return jsonify({
+        'reservation_id': reservation.id,
+        'spot_id': reservation.spot_id,
+        'lot': lot.prime_location_name,
+        'start_time': reservation.parking_timestamp.isoformat()
+        }), 200
 
