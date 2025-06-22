@@ -1,13 +1,17 @@
 from celery import Celery
 from app import create_app
+from celery.schedules import crontab
 
 def make_celery(app):
     celery = Celery(
         app.import_name,
-        broker=app.config["CELERY_BROKER_URL"],
-        backend=app.config["CELERY_RESULT_BACKEND"]
+        broker=app.config["broker_url"],
+        backend=app.config["result_backend"]
     )
     celery.conf.update(app.config)
+
+    celery.conf.timezone = 'Asia/Kolkata'
+    celery.conf.enable_utc = False
 
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
@@ -20,7 +24,11 @@ def make_celery(app):
 flask_app = create_app()
 celery = make_celery(flask_app)
 
-# Register tasks and bind them to celery
-from app.tasks.export import register_tasks
-register_tasks(celery)
+from app.tasks.export import register_tasks as register_export_tasks
+from app.tasks.reminders import register_tasks as register_reminder_tasks
+
+
+register_export_tasks(celery)
+register_reminder_tasks(celery)
+
 
