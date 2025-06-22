@@ -40,3 +40,24 @@ def my_reservation():
         'start_time': reservation.parking_timestamp.isoformat()
         }), 200
 
+@user_bp.route('/history', methods=['GET'])
+@jwt_required()
+def reservation_history():
+    user_id = get_jwt_identity()
+    reservations = Reservation.query.filter(
+            Reservation.user_id == user_id,
+            Reservation.leaving_timestamp.isnot(None)
+        ).order_by(Reservation.parking_timestamp.desc()).all()
+
+    output = []
+    for res in reservations:
+        lot = ParkingLot.query.get(res.lot_id)
+        output.append({
+            'reservation_id': res.id,
+            'lot': lot.prime_location_name if lot else "Unknown",
+            'start_time': res.parking_timestamp.isoformat(),
+            'end_time': res.leaving_timestamp.isoformat(),
+            'total_cost': res.parking_cost
+            })
+
+    return jsonify({'history': output}), 200
