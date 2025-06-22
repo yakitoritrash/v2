@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 from app import db
 from app.models import ParkingLot, ParkingSpot, Reservation, User
+from app.tasks import export 
 
 user_bp = Blueprint('user', __name__)
 
@@ -61,3 +62,19 @@ def reservation_history():
             })
 
     return jsonify({'history': output}), 200
+
+@user_bp.route('/export-history', methods=['POST'])
+@jwt_required()
+def export_history():
+    user_id = get_jwt_identity()
+
+    if not export.export_user_csv:
+        return jsonify({"error": "Export task not initialized"}), 503
+
+    # Now it's safe to call .delay() because it's a Celery task
+    task = export.export_user_csv.delay(user_id)
+
+    return jsonify({
+        "message": "Export started",
+        "task_id": task.id
+    }), 202

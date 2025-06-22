@@ -9,7 +9,6 @@ from flask_jwt_extended import JWTManager
 
 db = SQLAlchemy()
 login_manager = LoginManager()
-celery = Celery(__name__, broker='redis://localhost:6379/0')
 jwt = JWTManager()
 
 def create_app():
@@ -17,10 +16,13 @@ def create_app():
     app.config['JWT_SECRET_KEY'] = 'supersecretkey123'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///parking.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['CELERY_BROKER_URL'] = 'redis://localhost:6379/0'
+    app.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 
     db.init_app(app)
     jwt.init_app(app)
     CORS(app)
+
 
     from app.views.auth import auth_bp
     from app.views.admin import admin_bp

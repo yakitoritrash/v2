@@ -121,3 +121,40 @@ def view_user():
     users = User.query.filter_by(role='user').all()
     data = [{'id': u.id, 'username': u.username } for u in users]
     return jsonify({'users': data}), 200
+
+
+@admin_bp.route('/dashboard-summary', methods=['GET'])
+@jwt_required()
+def dashboard_summary():
+    user = User.query.get(get_jwt_identity())
+    if user.role != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+    try:
+        lots = ParkingLot.query.all()
+        summary = []
+
+        for lot in lots:
+            spots = ParkingSpot.query.filter_by(lot_id=lot.id).all()
+            total_spots = len(spots)
+            available_spots = sum(1 for spot in spots if spot.status == 'A')
+            occupied_spots = []
+
+            for spot in spots:
+                if spot.status == 'O' and spot.reservation:
+                    reserved_user = spot.reservation.user
+                    occupied_spots.append({
+                        'spot_id': spot.id,
+                        'reserved_by': reserved_user.username,
+                        'parking_timestamp': spot.reservation.parking_timestamp.isoformat()
+                    })
+            summary.append({
+                'lot_id': lot.id,
+                'prime_location_name': lot.prime_location_name,
+                'total_spots': total_spots,
+                'available_spots': available_spots,
+                'occupied_spots': occupied_spots
+                })
+        return jsonify({'dashboard': summary}), 200
+    except Exception as e:
+        return jsonify({'message': 'Error generating summary', 'error': str(e)}), 500
+

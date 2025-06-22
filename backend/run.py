@@ -1,6 +1,8 @@
 from app import create_app, db
 from app.models import User
 from werkzeug.security import generate_password_hash
+from app.tasks.export import register_tasks
+from app.celery_worker import celery
 
 app = create_app()
 
@@ -20,5 +22,6 @@ with app.app_context():
     else:
         print("Admin user already exists.")
 
+register_tasks(celery)
 if __name__ == "__main__":
     app.run(debug=True)
