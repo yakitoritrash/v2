@@ -112,4 +112,12 @@ def delete_parking_lot(lot_id):
         db.session.rollback()
         return jsonify({'message': 'Error deleting lot', 'error': str(e)}), 500
 
-
+@admin_bp.route('/users', methods = ['GET'])
+@jwt_required()
+def view_user():
+    user = User.query.get(get_jwt_identity())
+    if user.role != 'admin':
+        return jsonify({'message': 'Unauthorized'}), 403
+    users = User.query.filter_by(role='user').all()
+    data = [{'id': u.id, 'username': u.username } for u in users]
+    return jsonify({'users': data}), 200
