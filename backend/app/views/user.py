@@ -71,7 +71,6 @@ def export_history():
     if not export.export_user_csv:
         return jsonify({"error": "Export task not initialized"}), 503
 
-    # Now it's safe to call .delay() because it's a Celery task
     task = export.export_user_csv.delay(user_id)
 
     return jsonify({
