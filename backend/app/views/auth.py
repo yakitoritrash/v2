@@ -10,15 +10,17 @@ auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
 def register():
     data = request.get_json()
     username = data.get('username')
+    email = data.get('email')
     password = data.get('password')
+    phone_number = data.get('phone_number')
 
-    if not username or not password:
+    if not username or not password or not email or not phone_number:
         return jsonify({'message': 'Username and password are required'}), 400
     if User.query.filter_by(username=username).first():
         return jsonify({'message': 'User already exists'}), 409
 
     hashed_pw = generate_password_hash(password)
-    new_user = User(username=username, password=hashed_pw, role='user')
+    new_user = User(username=username, email=email, password=hashed_pw, role='user', phone_number=phone_number)
     db.session.add(new_user)
     db.session.commit()
     return jsonify({'message': 'User created'}), 201

@@ -1,7 +1,11 @@
 from celery import Celery
-from app import create_app
+from app import create_app, db, mail
 from celery.schedules import crontab
 
+# Step 1: Initialize Flask app
+flask_app = create_app()
+
+# Step 2: Make Celery app
 def make_celery(app):
     celery = Celery(
         app.import_name,
@@ -21,14 +25,14 @@ def make_celery(app):
     celery.Task = ContextTask
     return celery
 
-flask_app = create_app()
 celery = make_celery(flask_app)
 
+# Step 3: Import and register tasks *after* celery is defined
 from app.tasks.export import register_tasks as register_export_tasks
 from app.tasks.reminders import register_tasks as register_reminder_tasks
-
+from app.tasks.monthly import register_tasks as register_monthly_tasks
 
 register_export_tasks(celery)
 register_reminder_tasks(celery)
-
+register_monthly_tasks(celery, db, mail)
 

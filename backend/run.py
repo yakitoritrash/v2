@@ -13,6 +13,8 @@ with app.app_context():
     if not admin:
         admin = User(
                 username="admin",
+                email="example@gmail.com",
+                phone_number="9999999999",
                 password=generate_password_hash("admin123"),
                 role="admin"
                 )
