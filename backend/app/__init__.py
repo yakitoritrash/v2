@@ -34,7 +34,7 @@ def create_app():
     db.init_app(app)
     migrate = Migrate(app, db)
     jwt.init_app(app)
-    CORS(app)
+    CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}}, supports_credentials=True)
 
 
     from app.views.auth import auth_bp
