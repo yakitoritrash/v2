@@ -119,7 +119,7 @@ def view_user():
     if user.role != 'admin':
         return jsonify({'message': 'Unauthorized'}), 403
     users = User.query.filter_by(role='user').all()
-    data = [{'id': u.id, 'username': u.username } for u in users]
+    data = [{'id': u.id, 'username': u.username, 'email': u.email, 'role': u.role, 'phone_number': u.phone_number } for u in users]
     return jsonify({'users': data}), 200
 
 
