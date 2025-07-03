@@ -1,112 +1,104 @@
 <template>
-  <div class="container mt-4">
-    <h2>Admin Dashboard</h2>
+  <div class="container py-5">
+    <h2 class="mb-4">Admin Dashboard</h2>
 
-    <!-- Error Alert -->
-    <div v-if="errorMessage" class="alert alert-danger">
-      {{ errorMessage }}
+    <div v-if="userRole !== 'admin'" class="alert alert-danger">
+      You are not authorized to view this page.
     </div>
 
-    <!-- Add New Lot -->
-    <div class="card mb-4">
-      <div class="card-body">
-        <h5 class="card-title">Add New Parking Lot</h5>
-        <form @submit.prevent="createLot">
-          <div class="row">
-            <div class="col-md-3">
-              <input v-model="newLot.name" class="form-control" placeholder="Location Name" required />
-            </div>
-            <div class="col-md-2">
-              <input v-model.number="newLot.price" class="form-control" placeholder="Price" type="number" required />
-            </div>
-            <div class="col-md-3">
-              <input v-model="newLot.address" class="form-control" placeholder="Address" required />
-            </div>
-            <div class="col-md-2">
-              <input v-model="newLot.pincode" class="form-control" placeholder="Pincode" required />
-            </div>
-            <div class="col-md-2">
-              <input v-model.number="newLot.number_of_spots" class="form-control" placeholder="Spots" type="number" required />
-            </div>
-            <div class="col-md-2">
-              <button class="btn btn-success w-100" type="submit">Add</button>
-            </div>
-          </div>
-        </form>
+    <div v-else>
+      <!-- Error Alert -->
+      <div v-if="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
       </div>
-    </div>
 
-    <!-- Parking Lot Table -->
-    <div v-if="lots.length">
-      <h4>Parking Lots</h4>
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Price (₹/hr)</th>
-            <th>Pincode</th>
-            <th>Available Spots</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="lot in lots" :key="lot.id">
-            <td>{{ lot.prime_location_name }}</td>
-            <td>₹{{ lot.price }}</td>
-            <td>{{ lot.pincode }}</td>
-            <td>{{ lot.number_of_spots ?? 'N/A' }}</td>
-            <td>
-              <button class="btn btn-sm btn-info me-2" @click="viewSpots(lot.id)">View Spots</button>
-              <button class="btn btn-sm btn-warning me-2" @click="showEditModal(lot)">Edit</button>
-              <button class="btn btn-sm btn-danger" @click="deleteLot(lot.id)">Delete</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <button class="btn btn-outline-primary" @click="fetchLots">Refresh</button>
-    </div>
-    <div v-else class="text-muted">No parking lots available.</div>
+      <!-- Add New Lot -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Add New Parking Lot</h5>
+          <form @submit.prevent="createLot">
+            <div class="row g-2">
+              <div class="col-md-3">
+                <input v-model="newLot.name" class="form-control" placeholder="Location Name" required />
+              </div>
+              <div class="col-md-2">
+                <input v-model.number="newLot.price" class="form-control" placeholder="Price" type="number" required />
+              </div>
+              <div class="col-md-3">
+                <input v-model="newLot.address" class="form-control" placeholder="Address" required />
+              </div>
+              <div class="col-md-2">
+                <input v-model="newLot.pincode" class="form-control" placeholder="Pincode" required />
+              </div>
+              <div class="col-md-2">
+                <input v-model.number="newLot.number_of_spots" class="form-control" placeholder="Spots" type="number" required />
+              </div>
+              <div class="col-md-2">
+                <button class="btn btn-primary w-100" type="submit">Add</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
 
-    <!-- Users Table -->
-    <div class="mt-5">
-      <h4>
-        Registered Users
-        <button class="btn btn-sm btn-outline-secondary ms-3" @click="fetchUsers">Refresh</button>
-      </h4>
-      <table class="table table-striped" v-if="users.length">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Username</th>
-            <th>Email</th>
-            <th>Phone Number</th>
-            <th>Role</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="user in users" :key="user.id">
-            <td>{{ user.id }}</td>
-            <td>{{ user.username }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.phone_number }}</td>
-            <td>{{ user.role }}</td>
-          </tr>
-        </tbody>
-      </table>
-      <div v-else class="text-muted">No users found.</div>
-    </div>
+      <!-- Parking Lot Table -->
+      <div v-if="lots.length" class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Parking Lots</h5>
+          <table class="table table-hover">
+            <thead class="table-light">
+              <tr>
+                <th>Name</th>
+                <th>Price (₹/hr)</th>
+                <th>Pincode</th>
+                <th>Available Spots</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="lot in lots" :key="lot.id">
+                <td>{{ lot.prime_location_name }}</td>
+                <td>₹{{ lot.price }}</td>
+                <td>{{ lot.pincode }}</td>
+                <td>{{ lot.number_of_spots ?? 'N/A' }}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-info me-2" @click="viewSpots(lot.id)">View</button>
+                  <button class="btn btn-sm btn-outline-warning me-2" @click="showEditModal(lot)">Edit</button>
+                  <button class="btn btn-sm btn-outline-danger" @click="deleteLot(lot.id)">Delete</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <button class="btn btn-outline-secondary mt-2" @click="fetchLots">Refresh</button>
+        </div>
+      </div>
 
-    <!-- Edit Modal -->
-    <div v-if="editLot" class="modal-backdrop">
-      <div class="modal-content">
-        <h5>Edit Parking Lot</h5>
-        <form @submit.prevent="updateLot">
-          <input v-model="editLot.prime_location_name" class="form-control mb-2" />
-          <input v-model.number="editLot.price" class="form-control mb-2" type="number" />
-          <input v-model="editLot.pincode" class="form-control mb-2" />
-          <button type="submit" class="btn btn-primary me-2">Save</button>
-          <button class="btn btn-secondary" @click="editLot = null">Cancel</button>
-        </form>
+      <!-- Users Table -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Registered Users</h5>
+          <table class="table table-striped" v-if="users.length">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="user in users" :key="user.id">
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.phone_number }}</td>
+                <td>{{ user.role }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-else class="text-muted">No users found.</div>
+        </div>
       </div>
     </div>
 
@@ -150,9 +142,19 @@ const editLot = ref(null);
 const selectedSpots = ref([]);
 const spotModalVisible = ref(false);
 const selectedLotName = ref("");
+const userRole = ref("");
 
 const token = localStorage.getItem("access_token");
 const headers = { Authorization: `Bearer ${token}` };
+
+const fetchUserRole = async () => {
+  try {
+    const res = await api.get("/auth/me", { headers });
+    userRole.value = res.data.role;
+  } catch (e) {
+    userRole.value = "";
+  }
+};
 
 const fetchLots = async () => {
   try {
@@ -172,13 +174,7 @@ const createLot = async () => {
   try {
     await api.post(
       "/admin/parking-lot",
-      {
-        prime_location_name: newLot.value.name,
-        price: newLot.value.price,
-        pincode: newLot.value.pincode,
-        address: newLot.value.address,
-        number_of_spots: newLot.value.number_of_spots,
-      },
+      newLot.value,
       { headers }
     );
     newLot.value = { name: "", price: 0, pincode: "", address: "", number_of_spots: 0 };
@@ -237,9 +233,12 @@ const viewSpots = async (lotId) => {
   }
 };
 
-onMounted(() => {
-  fetchLots();
-  fetchUsers();
+onMounted(async () => {
+  await fetchUserRole();
+  if (userRole.value === "admin") {
+    await fetchLots();
+    await fetchUsers();
+  }
 });
 </script>
 
@@ -264,7 +263,7 @@ onMounted(() => {
   width: 500px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 </style>
 
