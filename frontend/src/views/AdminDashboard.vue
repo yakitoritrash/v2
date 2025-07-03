@@ -20,7 +20,7 @@
               <input v-model.number="newLot.price" class="form-control" placeholder="Price" type="number" required />
             </div>
             <div class="col-md-3">
-              <input v-model.number="newLot.address" class="form-control" placeholder="Address" required />
+              <input v-model="newLot.address" class="form-control" placeholder="Address" required />
             </div>
             <div class="col-md-2">
               <input v-model="newLot.pincode" class="form-control" placeholder="Pincode" required />
@@ -54,8 +54,9 @@
             <td>{{ lot.prime_location_name }}</td>
             <td>₹{{ lot.price }}</td>
             <td>{{ lot.pincode }}</td>
-            <td>{{ lot.number_of_spots?? 'N/A' }}</td>
+            <td>{{ lot.number_of_spots ?? 'N/A' }}</td>
             <td>
+              <button class="btn btn-sm btn-info me-2" @click="viewSpots(lot.id)">View Spots</button>
               <button class="btn btn-sm btn-warning me-2" @click="showEditModal(lot)">Edit</button>
               <button class="btn btn-sm btn-danger" @click="deleteLot(lot.id)">Delete</button>
             </td>
@@ -85,9 +86,9 @@
         <tbody>
           <tr v-for="user in users" :key="user.id">
             <td>{{ user.id }}</td>
-            <td>{{ user.username}}</td>
-            <td>{{ user.email}}</td>
-            <td>{{ user.phone_number}}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.phone_number }}</td>
             <td>{{ user.role }}</td>
           </tr>
         </tbody>
@@ -108,6 +109,32 @@
         </form>
       </div>
     </div>
+
+    <!-- Spot View Modal -->
+    <div v-if="spotModalVisible" class="modal-backdrop">
+      <div class="modal-content">
+        <h5>Parking Spots in {{ selectedLotName }}</h5>
+        <table class="table table-sm">
+          <thead>
+            <tr>
+              <th>Spot ID</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="spot in selectedSpots" :key="spot.id">
+              <td>{{ spot.id }}</td>
+              <td>
+                <span :class="{'text-success': spot.status === 'A', 'text-danger': spot.status === 'O'}">
+                  {{ spot.status === 'A' ? 'Available' : 'Occupied' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="btn btn-secondary mt-2" @click="spotModalVisible = false">Close</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -118,8 +145,11 @@ import api from "@/api/axios";
 const lots = ref([]);
 const users = ref([]);
 const errorMessage = ref("");
-const newLot = ref({ name: "", address: "", price: 0, pincode: ""});
+const newLot = ref({ name: "", address: "", price: 0, pincode: "", number_of_spots: 0 });
 const editLot = ref(null);
+const selectedSpots = ref([]);
+const spotModalVisible = ref(false);
+const selectedLotName = ref("");
 
 const token = localStorage.getItem("access_token");
 const headers = { Authorization: `Bearer ${token}` };
@@ -151,7 +181,7 @@ const createLot = async () => {
       },
       { headers }
     );
-    newLot.value = { name: "", price: 0, pincode: "", spots: 0 };
+    newLot.value = { name: "", price: 0, pincode: "", address: "", number_of_spots: 0 };
     await fetchLots();
   } catch (e) {
     alert("Failed to add parking lot.");
@@ -194,6 +224,19 @@ const fetchUsers = async () => {
   }
 };
 
+const viewSpots = async (lotId) => {
+  try {
+    const lot = lots.value.find(l => l.id === lotId);
+    selectedLotName.value = lot.prime_location_name;
+    const res = await api.get(`/admin/parking-lot/${lotId}/spots`, { headers });
+    selectedSpots.value = res.data.parking_spots;
+    spotModalVisible.value = true;
+  } catch (e) {
+    alert("Failed to load parking spots.");
+    console.error(e);
+  }
+};
+
 onMounted(() => {
   fetchLots();
   fetchUsers();
@@ -214,10 +257,14 @@ onMounted(() => {
   z-index: 1050;
 }
 .modal-content {
-  background: white;
+  color: #212529;
+  background-color: #f8f9fa;
   padding: 20px;
   border-radius: 8px;
-  width: 400px;
+  width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 </style>
 
