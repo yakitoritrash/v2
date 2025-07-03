@@ -1,8 +1,42 @@
+<script setup>
+import { ref, onMounted } from "vue";
+import api from "@/api/axios";
+
+const lots = ref([]);
+const errorMessage = ref("");
+
+const fetchLots = async () => {
+  try {
+    const token = localStorage.getItem("access_token");
+    const res = await api.get("/admin/parking-lots", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    lots.value = res.data.parking_lots;
+    errorMessage.value = "";  // clear any previous error
+  } catch (e) {
+    if (e.response?.status === 403) {
+      errorMessage.value = "You are not authorized to view this page.";
+    } else {
+      errorMessage.value = "An error occurred while fetching data.";
+      console.error("Fetch error:", e);
+    }
+  }
+};
+
+onMounted(() => {
+  fetchLots();
+});
+</script>
+
 <template>
   <div>
     <h2>Admin Dashboard</h2>
 
-    <section v-if="lots.length">
+    <div v-if="errorMessage" class="error">
+      {{ errorMessage }}
+    </div>
+
+    <section v-else-if="lots.length">
       <h3>Parking Lots</h3>
       <ul>
         <li v-for="lot in lots" :key="lot.id">
@@ -15,26 +49,11 @@
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted } from "vue";
-import api from "@/api/axios";
-
-const lots = ref([]);
-
-const fetchLots = async () => {
-  try {
-    const token = localStorage.getItem("access_token");
-    const res = await api.get("/admin/parking-lots", {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    lots.value = res.data.parking_lots;
-  } catch (e) {
-    console.error("Failed to fetch parking lots:", e);
-  }
-};
-
-onMounted(() => {
-  fetchLots();
-});
-</script>
+<style scoped>
+.error {
+  color: red;
+  font-weight: bold;
+  margin: 10px 0;
+}
+</style>
 
